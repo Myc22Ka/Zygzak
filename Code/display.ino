@@ -30,7 +30,6 @@ void leftRotateString(char* str, int d) {
 void display(const char* newTitle, const char* newMessage) {
   int cols = 16;
 
-  lcd.clear();
   setDisplay(newTitle, newMessage);
   showTitle(cols);
 
@@ -61,8 +60,8 @@ void scrollMessage(int row, int cols) {
       long command = IrReceiver.decodedIRData.command;
       String key = decodeKeyValue(command);
 
-      if (key == "2") {
-        display("Action", "Move forward!");
+      if(key != "ERROR") {
+        action(key);
         break;
       }
 
