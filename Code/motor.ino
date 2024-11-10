@@ -1,10 +1,7 @@
-unsigned long lastLCDUpdate = 0;
-const unsigned long lcdUpdateInterval = 1000;
-
 void moveForward(int speed) {
   float distance = readSensorData();
 
-  if (distance > 15) {
+  if (distance > 10) {
     analogWrite(A_1B, 0);
     analogWrite(A_1A, speed);
     analogWrite(B_1B, 0);
@@ -13,7 +10,7 @@ void moveForward(int speed) {
     stopMove();
     beeping = true;
   }
-  // Serial.println(distance);
+  Serial.println(distance);
 }
 
 void moveBackward(int speed) {
@@ -28,7 +25,7 @@ void forwardLeft(int speed) {
 
   int left = digitalRead(leftIR);
 
-  if (distance > 15 && left) {
+  if (distance > 10 && left) {
     analogWrite(A_1B, 0);
     analogWrite(A_1A, speed);
     analogWrite(B_1B, 0);
@@ -45,7 +42,7 @@ void forwardRight(int speed) {
 
   int right = digitalRead(rightIR);
 
-  if (distance > 15 && right) {
+  if (distance > 10 && right) {
     analogWrite(A_1B, 0);
     analogWrite(A_1A, 0);
     analogWrite(B_1B, 0);
