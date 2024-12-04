@@ -1,23 +1,5 @@
-#define BLYNK_PRINT Serial
-#define ESP8266_BAUD 115200
-
-#define BLYNK_TEMPLATE_ID "TMPL4NIcfe_yq"
-#define BLYNK_TEMPLATE_NAME "Quickstart Template"
-
-#include <ESP8266_Lib.h>
-#include <BlynkSimpleShieldEsp8266.h>
-#include <SoftwareSerial.h>
 #include <IRremote.h>
-#include <Wire.h>
-#include <LiquidCrystal_I2C.h>
-#include "auth.h"
-
-char auth[] = BLYNK_AUTH_TOKEN;
-
-SoftwareSerial EspSerial(2, 11);
-ESP8266 wifi(&EspSerial);
-
-LiquidCrystal_I2C lcd(0x27, 16, 2);
+#include <EEPROM.h>
 
 const int IR_RECEIVE_PIN = 12;
 
@@ -34,85 +16,60 @@ const int leftIR = 8;
 
 const int buzzerPin = 17;
 
-const int lineTrackPin = 13;
-
 int speed = 150;
-bool start = false;
 bool isMoving = false;
 String flag = "NONE";
 bool beeping = false;
+bool volumed = false;
 
-BLYNK_WRITE(V0){
-  int pinValue = param.asInt();
-  Serial.print(pinValue);
-}
+float leftOffset = 1.0;
+float rightOffset = 1.0;
 
 void setup() {
-  // Serial.begin(9600);
-  Serial.begin(115200);
+  Serial.begin(9600);
 
-  // // Motors
-  // pinMode(A_1B, OUTPUT);
-  // pinMode(A_1A, OUTPUT);
-  // pinMode(B_1B, OUTPUT);
-  // pinMode(B_1A, OUTPUT);
+  // Motors
+  pinMode(A_1B, OUTPUT);
+  pinMode(A_1A, OUTPUT);
+  pinMode(B_1B, OUTPUT);
+  pinMode(B_1A, OUTPUT);
+  EEPROM.write(0, 96);
+  EEPROM.write(1, 100);
+  leftOffset = EEPROM.read(0) * 0.01;
+  rightOffset = EEPROM.read(1) * 0.01;
 
-  // // Ultrasonic Module
-  // pinMode(echoPin, INPUT);
-  // pinMode(trigPin, OUTPUT);
+  // Ultrasonic Module
+  pinMode(echoPin, INPUT);
+  pinMode(trigPin, OUTPUT);
 
-  // // IR obstacle
-  // pinMode(leftIR, INPUT);
-  // pinMode(rightIR, INPUT);
+  // IR obstacle
+  pinMode(leftIR, INPUT);
+  pinMode(rightIR, INPUT);
 
-  // // Line Track Module
-  // pinMode(lineTrackPin, INPUT);
+  // Buzzer
+  pinMode(buzzerPin, OUTPUT);
 
-  // // LCD
-  // lcd.init();
-  // lcd.backlight();
-
-  // // Buzzer
-  // pinMode(buzzerPin, OUTPUT);
-
-  // // IR Receiver Remote
-  // IrReceiver.begin(IR_RECEIVE_PIN, ENABLE_LED_FEEDBACK); 
-  // Serial.println("REMOTE CONTROL START");
-
-  // Blynk
-  EspSerial.begin(ESP8266_BAUD);
-  delay(10);
-  Blynk.begin(auth, wifi, SSID, PASS);
-
+  // IR Receiver Remote
+  IrReceiver.begin(IR_RECEIVE_PIN, ENABLE_LED_FEEDBACK); 
+  Serial.println("REMOTE CONTROL START");
 }
 
 void loop() {
-  Blynk.run();
+  if(beeping) {
+    beep();
+  }
 
-  // if(beeping) {
-  //   beep();
-  // }
+  if (IrReceiver.decode()) {
+    String key = decodeKeyValue(IrReceiver.decodedIRData.command);
+    if (key != "ERROR") {
+      flag = key;
+    }
 
-  // if (IrReceiver.decode()) {
-  //   String key = decodeKeyValue(IrReceiver.decodedIRData.command);
-  //   if (key != "ERROR") {
-  //     flag = key;
-  //   }
+    IrReceiver.resume();
+  }
+  if (flag == "AUTO") {
+    AutoDrive(speed);
+  }
 
-  //   IrReceiver.resume();
-  // }
-  // if (flag == "AUTO") {
-  //   AutoDrive(speed);
-  // } else if (flag == "LINE") {
-  //   lineTrack(speed);
-  // }
-
-  // action(flag);
-
-  // if(!start){
-  //   setDisplay("SMiW", "Testing!");
-  //   animateText();
-
-  //   start = true;
-  // }
+  action(flag);
 }
